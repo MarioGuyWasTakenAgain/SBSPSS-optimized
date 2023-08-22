@@ -100,21 +100,20 @@ sFlipTable	FlipTable[4]=
 /*****************************************************************************/
 CLayerTile3d::CLayerTile3d(sLevelHdr *LevelHdr,sLayerHdr *Hdr,u8 *_RGBMap,u8 *_RGBTable) : CLayerTile(LevelHdr,Hdr)
 {
-		ElemBank3d=LevelHdr->ElemBank3d;
-		TriList=LevelHdr->TriList;
-		QuadList=LevelHdr->QuadList;
-		VtxList=LevelHdr->VtxList;
-		VtxIdxList=LevelHdr->VtxIdxList;
-		RGBMap=_RGBMap;
-		RGBTable=_RGBTable;
+	ElemBank3d=LevelHdr->ElemBank3d;
+	TriList=LevelHdr->TriList;
+	QuadList=LevelHdr->QuadList;
+	VtxList=LevelHdr->VtxList;
+	VtxIdxList=LevelHdr->VtxIdxList;
+	RGBMap=_RGBMap;
+	RGBTable=_RGBTable;
 
-#if		defined(_SHOW_POLYZ_)
+	#if defined(_SHOW_POLYZ_)
 		Font=new ("PrimFont") FontBank;
 		Font->initialise( &standardFont );
 		Font->setOt( 0 );
 		Font->setTrans(1);
-#endif
-
+	#endif
 }
 
 /*****************************************************************************/
@@ -135,376 +134,222 @@ void	CLayerTile3d::init(DVECTOR &MapPos,int Shift)
 /*****************************************************************************/
 void	CLayerTile3d::shutdown()
 {
-#if		defined(_SHOW_POLYZ_)
+	#if defined(_SHOW_POLYZ_)
 		Font->dump();
 		delete Font;
-#endif
-		for (int i=0; i<16; i++)
-		{
-			MemFree(DeltaTableX[i]);
-			MemFree(DeltaTableY[i]);
-		}
+	#endif
+	for (int i=0; i<16; i++)
+	{
+		MemFree(DeltaTableX[i]);
+		MemFree(DeltaTableY[i]);
+	}
 
 }
 
 /*****************************************************************************/
-void	CLayerTile3d::CalcDelta()
+void CLayerTile3d::CalcDelta()
 {
-VECTOR	BlkPos;
-SVECTOR	Pnt={-BLOCK_SIZE/2,-BLOCK_SIZE/2,-BLOCK_SIZE*4};
-s16		*Tab;
-		CGameScene::setCameraMtx();
+    VECTOR BlkPos;
+    SVECTOR Pnt = {-BLOCK_SIZE / 2, -BLOCK_SIZE / 2, -BLOCK_SIZE * 4};
+    s16* TabX = nullptr;
+    s16* TabY = nullptr;
 
-		for (int i=0; i<16; i++)
-		{
-			Tab=(s16*)MemAlloc(DeltaTableSizeX*2*sizeof(s16),"DeltaTableXTable");
-			DeltaTableX[i]=Tab;
-			ASSERT(Tab);
-			BlkPos.vx=RENDER_X_OFS-i;
-			BlkPos.vy=RENDER_Y_OFS;
-			for (int x=0; x<DeltaTableSizeX; x++)
-			{
-				s32		Tmp;
-				DVECTOR	O;
-				CMX_SetTransMtxXY(&BlkPos);
-				Pnt.vz=-BLOCK_SIZE*4;
-				RotTransPers(&Pnt,(s32*)&O,&Tmp,&Tmp);
-				*Tab++=O.vx;
-				Pnt.vz=+BLOCK_SIZE*4;
-				RotTransPers(&Pnt,(s32*)&O,&Tmp,&Tmp);
-				*Tab++=O.vx;
-				BlkPos.vx+=BLOCK_SIZE;
-			}
+    CGameScene::setCameraMtx();
 
-			Tab=(s16*)MemAlloc(DeltaTableSizeY*2*sizeof(s16),"DeltaYTable");
-			DeltaTableY[i]=Tab;
-			ASSERT(Tab);
-			BlkPos.vx=RENDER_X_OFS;
-			BlkPos.vy=RENDER_Y_OFS-i;
-			for (int y=0; y<DeltaTableSizeY; y++)
-			{
-				s32		Tmp;
-				DVECTOR	O;
-				CMX_SetTransMtxXY(&BlkPos);
-				Pnt.vz=-BLOCK_SIZE*4;
-				RotTransPers(&Pnt,(s32*)&O,&Tmp,&Tmp);
-				*Tab++=O.vy;
-				Pnt.vz=+BLOCK_SIZE*4;
-				RotTransPers(&Pnt,(s32*)&O,&Tmp,&Tmp);
-				*Tab++=O.vy;
-				BlkPos.vy+=BLOCK_SIZE;
-			}
-		}
-		DeltaF=DeltaTableX[0][(1*2)+0]-DeltaTableX[0][(0*2)+0];
-		DeltaB=DeltaTableY[0][(1*2)+1]-DeltaTableY[0][(0*2)+1];
+    for (int i = 0; i < 16; ++i)
+    {
+        TabX = (s16*)MemAlloc(DeltaTableSizeX * 2 * sizeof(s16), "DeltaTableXTable");
+        DeltaTableX[i] = TabX;
+        ASSERT(TabX);
 
+        TabY = (s16*)MemAlloc(DeltaTableSizeY * 2 * sizeof(s16), "DeltaYTable");
+        DeltaTableY[i] = TabY;
+        ASSERT(TabY);
+
+        BlkPos.vx = RENDER_X_OFS - i;
+        BlkPos.vy = RENDER_Y_OFS;
+
+        for (int j = 0; j < DeltaTableSizeX; ++j)
+        {
+            s32 Tmp;
+            DVECTOR O;
+            CMX_SetTransMtxXY(&BlkPos);
+            
+            Pnt.vz = -BLOCK_SIZE * 4;
+            RotTransPers(&Pnt, (s32*)&O, &Tmp, &Tmp);
+            *TabX++ = O.vx;
+            
+            Pnt.vz = +BLOCK_SIZE * 4;
+            RotTransPers(&Pnt, (s32*)&O, &Tmp, &Tmp);
+            *TabX++ = O.vx;
+            
+            BlkPos.vx += BLOCK_SIZE;
+        }
+
+        BlkPos.vx = RENDER_X_OFS;
+        BlkPos.vy = RENDER_Y_OFS - i;
+
+        for (int j = 0; j < DeltaTableSizeY; ++j)
+        {
+            s32 Tmp;
+            DVECTOR O;
+            CMX_SetTransMtxXY(&BlkPos);
+
+            Pnt.vz = -BLOCK_SIZE * 4;
+            RotTransPers(&Pnt, (s32*)&O, &Tmp, &Tmp);
+            *TabY++ = O.vy;
+
+            Pnt.vz = +BLOCK_SIZE * 4;
+            RotTransPers(&Pnt, (s32*)&O, &Tmp, &Tmp);
+            *TabY++ = O.vy;
+
+            BlkPos.vy += BLOCK_SIZE;
+        }
+    }
+
+    DeltaF = DeltaTableX[0][(1 * 2) + 0] - DeltaTableX[0][(0 * 2) + 0];
+    DeltaB = DeltaTableY[0][(1 * 2) + 1] - DeltaTableY[0][(0 * 2) + 1];
+}
+
+
+/*****************************************************************************/
+void CLayerTile3d::think(DVECTOR &MapPos)
+{
+    MapXY.vx = (MapPos.vx >> 4) - SCREEN_TILE_ADJ_L;
+    MapXY.vy = (MapPos.vy >> 4) - SCREEN_TILE_ADJ_U;
+
+    ShiftX = MapPos.vx & 15;
+    ShiftY = MapPos.vy & 15;
+
+    RenderOfs.vx = RenderOfs.vy = 0;
+    DeltaFOfs.vx = DeltaFOfs.vy = 0;
+    DeltaBOfs.vx = DeltaBOfs.vy = 0;
+
+    if (MapXY.vx < 0)
+    {
+        int absVx = -MapXY.vx;
+        RenderOfs.vx = absVx * BLOCK_SIZE;
+        DeltaFOfs.vx = absVx * DeltaF;
+        DeltaBOfs.vx = absVx * DeltaB;
+        MapXY.vx = 0;
+    }
+
+    if (MapXY.vy < 0)
+    {
+        int absVy = -MapXY.vy;
+        RenderOfs.vy = absVy * BLOCK_SIZE;
+        DeltaFOfs.vy = absVy * DeltaF;
+        DeltaBOfs.vy = absVy * DeltaB;
+        MapXY.vy = 0;
+    }
+
+    RenderW = std::min(SCREEN_TILE3D_WIDTH, MapWidth - MapXY.vx);
+    RenderH = std::min(SCREEN_TILE3D_HEIGHT, MapHeight - MapXY.vy);
+}
+
+
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+void CLayerTile3d::CacheElemVtx(sElem3d* Elem)
+{
+    int Count = Elem->VtxTriCount;
+    sVtx* V0, * V1, * V2;
+    u16* IdxTable = &VtxIdxList[Elem->VtxIdxStart];
+    s32* OutVtx = (s32*)SCRATCH_RAM + 8;
+
+    V0 = &VtxList[*IdxTable++];
+    V1 = &VtxList[*IdxTable++];
+    V2 = &VtxList[*IdxTable++];
+    gte_ldv3(V0, V1, V2);
+
+    while (Count--)
+    {
+        s32* OutPtr = OutVtx;
+        OutVtx += 3;
+
+        V0 = &VtxList[*IdxTable++];
+        V1 = &VtxList[*IdxTable++];
+        V2 = &VtxList[*IdxTable++];
+
+        gte_ldv3(V0, V1, V2);
+
+        gte_rtpt_b();
+        gte_stsxy3c(OutPtr);
+    }
 }
 
 /*****************************************************************************/
-void	CLayerTile3d::think(DVECTOR &MapPos)
+void CLayerTile3d::render()
 {
-			MapXY.vx=MapPos.vx>>4;
-			MapXY.vy=MapPos.vy>>4;
-			
-			MapXY.vx-=SCREEN_TILE_ADJ_L;
-			MapXY.vy-=SCREEN_TILE_ADJ_U;
+    VECTOR BlkPos;
+    DVECTOR DP[8];  // Delta pointers
 
-			ShiftX=(MapPos.vx & 15);
-			ShiftY=(MapPos.vy & 15);
+    int MapOfs = GetMapOfs();
+    sTileMapElem* MapPtr = Map + MapOfs;
+    u8* RGBMapPtr = RGBMap + MapOfs;
+    u8* PrimPtr = GetPrimPtr();
+    const u8* XYList = (const u8*)SCRATCH_RAM;
 
-			RenderOfs.vx=RenderOfs.vy=0;
-			DeltaFOfs.vx=DeltaFOfs.vy=0;
-			DeltaBOfs.vx=DeltaBOfs.vy=0;
-			if (MapXY.vx<0) 
-			{
-				RenderOfs.vx=-MapXY.vx*BLOCK_SIZE;
-				DeltaFOfs.vx=-MapXY.vx*DeltaF;
-				DeltaBOfs.vx=-MapXY.vx*DeltaB;
-				MapXY.vx=0;
-			}
-			if (MapXY.vy<0) 
-			{
-				RenderOfs.vy=-MapXY.vy*BLOCK_SIZE;
-				DeltaFOfs.vy=-MapXY.vy*DeltaF;
-				DeltaBOfs.vy=-MapXY.vy*DeltaB;
-				MapXY.vy=0;
-			}
+    #if defined(_SHOW_POLYZ_)
+    	s16 TCount = 0, QCount = 0;
+    #endif
 
-			if (MapXY.vx+SCREEN_TILE3D_WIDTH<=MapWidth)
-				RenderW=SCREEN_TILE3D_WIDTH;
-			else
-				RenderW=MapWidth-MapXY.vx;
+    BlkPos.vx = RENDER_X_OFS - ShiftX + RenderOfs.vx;
+    BlkPos.vy = RENDER_Y_OFS - ShiftY + RenderOfs.vy;
 
-			if (MapXY.vy+SCREEN_TILE3D_HEIGHT<=MapHeight)
-				RenderH=SCREEN_TILE3D_HEIGHT;
-			else
-				RenderH=MapHeight-MapXY.vy;
-}
+    for (int Y = 0; Y < RenderH; ++Y)
+    {
+        sTileMapElem* MapRow = MapPtr;
+        u8* RGBRow = RGBMapPtr;
+        s32 BlkXOld = BlkPos.vx;
+        s16* DeltaTabX = DeltaTableX[ShiftX];
 
-/*****************************************************************************/
-/*****************************************************************************/
-/*****************************************************************************/
-void	CLayerTile3d::CacheElemVtx(sElem3d *Elem)
-{
-int		Count=Elem->VtxTriCount;
-sVtx	*V0,*V1,*V2;
-u16		*IdxTable=&VtxIdxList[Elem->VtxIdxStart];
-s32		*OutVtx=(s32*)SCRATCH_RAM;
-s32		*OutPtr;
+        for (int X = 0; X < RenderW; ++X)
+        {
+            u16 Tile = MapRow->Tile;
+            u16 TileIdx = Tile >> 2;
+            sElem3d* Elem = &ElemBank3d[TileIdx];
 
-		OutVtx+=8;
+            int TriCount = Elem->TriCount;
+            int QuadCount = Elem->QuadCount;
 
-		V0=&VtxList[*IdxTable++];
-		V1=&VtxList[*IdxTable++];
-		V2=&VtxList[*IdxTable++];
-		gte_ldv3(V0,V1,V2);
+            if (TriCount || QuadCount)
+            {
+                sFlipTable* FTab = &FlipTable[Tile & 3];
+                u8* RGB = &RGBTable[RGBRow[X] * (16 * 4)];
 
-		while (Count--)
-		{
-			gte_rtpt_b(); // 22 cycles
-// Preload next (when able) - Must check this
-			V0=&VtxList[*IdxTable++];
-			V1=&VtxList[*IdxTable++];
-			V2=&VtxList[*IdxTable++];
-			OutPtr=OutVtx;
-			OutVtx+=3;
-			gte_ldv3(V0,V1,V2);
-			gte_stsxy3c(OutPtr);	// read XY back
-		}
-}
+                CMX_SetTransMtxXY(&BlkPos);
+                CMX_SetRotMatrixXY(&FTab->Mtx);
 
-/*****************************************************************************/
-void	CLayerTile3d::render()
-{
-int				MapOfs=GetMapOfs();
-sTileMapElem	*MapPtr=Map+MapOfs;
-u8				*RGBMapPtr=RGBMap+MapOfs;
-u8				*PrimPtr=GetPrimPtr();
-u8	const		*XYList=(u8*)SCRATCH_RAM;
-u32				T0,T1,T2,T3;
-s32				ClipZ;
-sOT				*ThisOT;
-VECTOR			BlkPos;
-DVECTOR			*DP0,*DP1,*DP2,*DP3;
-s16				*DeltaTabY=DeltaTableY[ShiftY];
+                // Cache vertex pointers
+                cacheVertices(Elem);
 
-#if		defined(_SHOW_POLYZ_)
-s16				TCount=0,QCount=0;
-#endif
+                // Cache delta pointers
+                cacheDeltas(FTab, DeltaTabX, DeltaTableY[ShiftY]);
 
-// Setup Trans Matrix
-		BlkPos.vx=RENDER_X_OFS-(ShiftX)+RenderOfs.vx;
-		BlkPos.vy=RENDER_Y_OFS-(ShiftY)+RenderOfs.vy;
+                // Render triangles
+                renderTriangles(Elem, XYList, PrimPtr, TriCount, RGB, FTab->ClipCode);
+                
+                // Render quads
+                renderQuads(Elem, XYList, PrimPtr, QuadCount, RGB, FTab->ClipCode);
 
-		for (int Y=0; Y<RenderH; Y++)
-		{
-			sTileMapElem	*MapRow=MapPtr;
-			u8				*RGBRow=RGBMapPtr;
-			s32				BlkXOld=BlkPos.vx;
-			s16				*DeltaTabX=DeltaTableX[ShiftX];
+            }
+            BlkPos.vx += BLOCK_SIZE;
+            DeltaTabX += 2;
+        }
 
-			for (int X=0; X<RenderW; X++)
-			{
-				u16			Tile=MapRow->Tile;
-				u16			TileIdx=Tile>>2;
-				sElem3d		*Elem=&ElemBank3d[TileIdx];
+        MapPtr += MapWidth;
+        RGBMapPtr += MapWidth;
+        BlkPos.vx = BlkXOld;
+        BlkPos.vy += BLOCK_SIZE;
+    }
 
-				int			TriCount=Elem->TriCount;				
-				int			QuadCount=Elem->QuadCount;				
-				int			RGBOfs=*RGBRow++;
+    SetPrimPtr((u8*)PrimPtr);
 
-				if (TriCount || QuadCount)	// Blank tiles rejected here, to prevent over processing (as no tri-count)
-				{
-					sFlipTable	*FTab=&FlipTable[Tile&3];
-					u8			*RGB=&RGBTable[RGBOfs*(16*4)];
-
-					CMX_SetTransMtxXY(&BlkPos);
-					CMX_SetRotMatrixXY(&FTab->Mtx);
-
-// --- Cache Vtx ----------
-					{
-					int		Count=Elem->VtxTriCount;
-					sVtx	*V0,*V1,*V2;
-					u16		*IdxTable=&VtxIdxList[Elem->VtxIdxStart];
-					s32		*OutVtx=(s32*)SCRATCH_RAM;
-					s32		*OutPtr;
-
-							OutVtx+=8;
-
-							V0=&VtxList[*IdxTable++];
-							V1=&VtxList[*IdxTable++];
-							V2=&VtxList[*IdxTable++];
-							gte_ldv3(V0,V1,V2);
-
-							while (Count--)
-							{
-								gte_rtpt_b(); // 22 cycles
-					// Preload next (when able) - Must check this
-								V0=&VtxList[*IdxTable++];
-								V1=&VtxList[*IdxTable++];
-								V2=&VtxList[*IdxTable++];
-								OutPtr=OutVtx;
-								OutVtx+=3;
-								gte_ldv3(V0,V1,V2);
-								gte_stsxy3c(OutPtr);	// read XY back
-							}
-					}
-
-					s16	FL=DeltaTabX[(0*2)+0]+DeltaFOfs.vx;
-					s16	FR=DeltaTabX[(1*2)+0]+DeltaFOfs.vx;
-					s16	FU=DeltaTabY[(0*2)+0]+DeltaFOfs.vy;
-					s16	FD=DeltaTabY[(1*2)+0]+DeltaFOfs.vy;
-					DP0=FTab->DeltaTab[0];
-					DP1=FTab->DeltaTab[1];
-					DP2=FTab->DeltaTab[2];
-					DP3=FTab->DeltaTab[3];
-					DP0->vx=FL;
-					DP0->vy=FU;
-					DP1->vx=FR;
-					DP1->vy=FU;
-					DP2->vx=FL;
-					DP2->vy=FD;
-					DP3->vx=FR;
-					DP3->vy=FD;
-
-					s16	BL=DeltaTabX[(0*2)+1]+DeltaBOfs.vx;
-					s16	BR=DeltaTabX[(1*2)+1]+DeltaBOfs.vx;
-					s16	BU=DeltaTabY[(0*2)+1]+DeltaBOfs.vy;
-					s16	BD=DeltaTabY[(1*2)+1]+DeltaBOfs.vy;
-					DP0=FTab->DeltaTab[4];
-					DP1=FTab->DeltaTab[5];
-					DP2=FTab->DeltaTab[6];
-					DP3=FTab->DeltaTab[7];
-					DP0->vx=BL;
-					DP0->vy=BU;
-					DP1->vx=BR;
-					DP1->vy=BU;
-					DP2->vx=BL;
-					DP2->vy=BD;
-					DP3->vx=BR;
-					DP3->vy=BD;
-
-// --- Render Tri's -------------
-					sTri	*TList=&TriList[Elem->TriStart];
-					while (TriCount--)
-					{
-						POLY_GT3	*ThisPrim=(POLY_GT3*)PrimPtr;
-
-						T0=*(u32*)(XYList+TList->P0); 
-						T1=*(u32*)(XYList+TList->P1); 
-						T2=*(u32*)(XYList+TList->P2);
-						gte_ldsxy0(T0);
-						gte_ldsxy1(T1);
-						gte_ldsxy2(T2);
-						
-						setlen(ThisPrim, GPU_PolyGT3Tag);
-						gte_nclip_b();	// 8 cycles
-
-						*(u32*)&ThisPrim->x0=T0;	// Set XY0
-						*(u32*)&ThisPrim->x1=T1;	// Set XY1
-						*(u32*)&ThisPrim->x2=T2;	// Set XY2
-						T0=*(u32*)&TList->uv0;		// Get UV0 & TPage
-						T1=*(u32*)&TList->uv1;		// Get UV1 & Clut
-						T2=*(u32*)&TList->uv2;		// Get UV2
-						gte_stopz(&ClipZ);
-						ThisOT=OtPtr+TList->OTOfs;
-						ClipZ^=FTab->ClipCode;
-						if (ClipZ<0)
-						{
-							*(u32*)&ThisPrim->u0=T0;	// Set UV0
-							*(u32*)&ThisPrim->u1=T1;	// Set UV1
-							*(u32*)&ThisPrim->u2=T2;	// Set UV2
-							{ // lighting
-								T0=*(u32*)&RGB[TList->C0];
-								T1=*(u32*)&RGB[TList->C1];
-								T2=*(u32*)&RGB[TList->C2];
-								*(u32*)&ThisPrim->r0=T0;
-								*(u32*)&ThisPrim->r1=T1;
-								*(u32*)&ThisPrim->r2=T2;
-							}
-#if		defined(_SHOW_POLYZ_)	
-							if (ShowPolyz)	{setRGB0(ThisPrim,127,0,0); setRGB1(ThisPrim,255,0,0); setRGB2(ThisPrim,255,0,0); TCount++;}	
-#endif
-							ThisPrim->code=TList->PolyCode;
-							addPrim(ThisOT,ThisPrim);
-							PrimPtr+=sizeof(POLY_GT3);
-						}
-						TList++;
-					}
-
-// --- Render Quads -----------
-					sQuad	*QList=&QuadList[Elem->QuadStart];
-					while (QuadCount--)
-					{
-						POLY_GT4	*ThisPrim=(POLY_GT4*)PrimPtr;
-
-						T0=*(u32*)(XYList+QList->P0); 
-						T1=*(u32*)(XYList+QList->P1); 
-						T2=*(u32*)(XYList+QList->P2);
-						gte_ldsxy0(T0);
-						gte_ldsxy1(T1);
-						gte_ldsxy2(T2);
-						
-						setlen(ThisPrim, GPU_PolyGT4Tag);
-						gte_nclip_b();	// 8 cycles
-						T3=*(u32*)(XYList+QList->P3);
-
-						*(u32*)&ThisPrim->x0=T0;	// Set XY0
-						*(u32*)&ThisPrim->x1=T1;	// Set XY1
-						*(u32*)&ThisPrim->x2=T2;	// Set XY2
-						*(u32*)&ThisPrim->x3=T3;	// Set XY3
-						T0=*(u32*)&QList->uv0;		// Get UV0 & TPage
-						T1=*(u32*)&QList->uv1;		// Get UV1 & Clut
-						T2=*(u32*)&QList->uv2;		// Get UV2
-						T3=*(u32*)&QList->uv3;		// Get UV2
-						gte_stopz(&ClipZ);
-						ThisOT=OtPtr+QList->OTOfs;
-						ClipZ^=FTab->ClipCode;
-						if (ClipZ<0)
-						{
-							*(u32*)&ThisPrim->u0=T0;	// Set UV0
-							*(u32*)&ThisPrim->u1=T1;	// Set UV1
-							*(u32*)&ThisPrim->u2=T2;	// Set UV2
-							*(u32*)&ThisPrim->u3=T3;	// Set UV2
-							{ // Lighting
-								T0=*(u32*)&RGB[QList->C0];
-								T1=*(u32*)&RGB[QList->C1];
-								T2=*(u32*)&RGB[QList->C2];
-								T3=*(u32*)&RGB[QList->C3];
-								*(u32*)&ThisPrim->r0=T0;
-								*(u32*)&ThisPrim->r1=T1;
-								*(u32*)&ThisPrim->r2=T2;
-								*(u32*)&ThisPrim->r3=T3;
-							}
-#if		defined(_SHOW_POLYZ_)	
-							if (ShowPolyz)	{setRGB0(ThisPrim,0,127,0);setRGB1(ThisPrim,0,255,0); setRGB2(ThisPrim,0,255,0); setRGB3(ThisPrim,0,255,0); QCount++;}	
-#endif
-							ThisPrim->code=QList->PolyCode;
-
-							addPrim(ThisOT,ThisPrim);
-							PrimPtr+=sizeof(POLY_GT4);
-						}
-						QList++;
-					}
-
-				}
-				MapRow++;
-				BlkPos.vx+=BLOCK_SIZE;
-				DeltaTabX+=2;
-			}
-			MapPtr+=MapWidth;
-			RGBMapPtr+=MapWidth;
-			BlkPos.vx=BlkXOld;
-			BlkPos.vy+=BLOCK_SIZE;
-			DeltaTabY+=2;
-		}
-
-		SetPrimPtr((u8*)PrimPtr);
-
-#if		defined(_SHOW_POLYZ_)
-char	Txt[256];
-		sprintf(Txt,"TC %i\nQC %i",TCount,QCount);
-		Font->print( 128, 32, Txt);
-#endif
-
+    #if defined(_SHOW_POLYZ_)
+    	char Txt[256];
+    	sprintf(Txt, "TC %i\nQC %i", TCount, QCount);
+    	Font->print(128, 32, Txt);
+    #endif
 }
