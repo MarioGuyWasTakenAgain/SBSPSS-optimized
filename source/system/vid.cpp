@@ -73,7 +73,10 @@ POLY_FT4	*PolyPtr=&LoadPoly;
 		DrawPrim(PolyPtr);
 
 		LoadTime++;
-		if (LoadTime>=LoadTabSize)	LoadTime=0;
+		if (LoadTime>=LoadTabSize) 
+		{
+			LoadTime=0;
+		}
 }
 
 /*****************************************************************************/
@@ -97,8 +100,14 @@ void	StartLoad(int _loadX,int _loadY)
 {
 		SYSTEM_DBGMSG("Start Load");
 
-		if (_loadX!=-1) LoadX=_loadX;
-		if (_loadY!=-1) LoadY=_loadY;
+		if (_loadX!=-1) 
+		{
+			LoadX=_loadX;
+		}
+		if (_loadY!=-1)
+		{
+			LoadY=_loadY;
+		}
 		OldClearScreen=Screen[0].Draw.isbg;
 		Screen[0].Draw.isbg=Screen[1].Draw.isbg=0;
 
@@ -159,7 +168,13 @@ static void VidVSyncCallback()
 		VbFunc();
 		VbFunc = NULL;
 		}
-	for (i=0; i< MaxVBFuncs; i++) if (VbFuncList[i]) VbFuncList[i]();
+	for (i=0; i< MaxVBFuncs; i++) 
+	{
+		if (VbFuncList[i]) 
+		{
+			VbFuncList[i]();
+		}
+	}
 }
 }
 /*****************************************************************************/
@@ -183,53 +198,100 @@ void VidRemoveVSyncFunc(VbFuncType v)
 {
 	int i;
 	for (i=0; i<MaxVBFuncs; i++) 
-		{
+	{
 		if (VbFuncList[i] == v) 
-			{
+		{
 			VbFuncList[i] = NULL;
 			return;
-			}
 		}
+	}
 	ASSERT(!"VSYNC Func Not Found");
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-int			VidGetXOfs()				{return(ScreenXOfs);}
-int 		VidGetYOfs()				{return(ScreenYOfs);}
-void		VidSetXYOfs(int x,int y)	{ScreenXOfs = x;	ScreenYOfs = y;}
-int 		VidGetScrW()				{return(ScreenW);}
-int 		VidGetScrH()				{return(ScreenH);}
-sVidScreen	*VidGetScreen()				{return &Screen[FrameFlipFlag];}
-sVidScreen	*VidGetDispScreen()			{return (VidGetScreen());}
-sVidScreen	*VidGetDrawScreen()			{return &Screen[FrameFlipFlag^1];}
-u32			VidGetFrameCount()			{return(FrameCounter);}
-u32			VidGetTickCount()			{return(TickBuffer[FrameFlipFlag^1]);}
-int			VidGetVblsThisFrame()		{return s_vblsThisFrame;}
+int VidGetXOfs() {
+    return ScreenXOfs;
+}
 
-void		SetScreenImage(u8 *Ptr)		{ScreenImage=Ptr;}
-u8			*GetScreenImage()			{return ScreenImage;}
-void		ClearScreenImage()			{ScreenImage=0;}
+int VidGetYOfs() {
+    return ScreenYOfs;
+}
+
+void VidSetXYOfs(int x, int y) {
+    ScreenXOfs = x;
+    ScreenYOfs = y;
+}
+
+int VidGetScrW() {
+    return ScreenW;
+}
+
+int VidGetScrH() {
+    return ScreenH;
+}
+
+sVidScreen* VidGetScreen() {
+    return &Screen[FrameFlipFlag];
+}
+
+sVidScreen* VidGetDispScreen() {
+    return VidGetScreen();
+}
+
+sVidScreen* VidGetDrawScreen() {
+    return &Screen[FrameFlipFlag^1];
+}
+
+u32 VidGetFrameCount() {
+    return FrameCounter;
+}
+
+u32 VidGetTickCount() {
+    return TickBuffer[FrameFlipFlag^1];
+}
+
+int VidGetVblsThisFrame() {
+    return s_vblsThisFrame;
+}
+
+void SetScreenImage(u8* Ptr) {
+    ScreenImage = Ptr;
+}
+
+u8* GetScreenImage() {
+    return ScreenImage;
+}
+
+void ClearScreenImage() {
+    ScreenImage = 0;
+}
+
 
 /*****************************************************************************/
-void	ClearVRam()
-{
-#if	defined(__VERSION_DEBUG__) && !defined(__USER_CDBUILD__)
-RECT 	Rect;
-//Clear All Videoram
-	setRECT(&Rect,INGAME_SCREENW,0,1024-INGAME_SCREENW,512);
-	ClearImage(&Rect,0,0,0);
+void ClearVRam() {
+#if defined(__VERSION_DEBUG__) && !defined(__USER_CDBUILD__)
+    RECT Rect;
+    // Clear the entire video RAM
+    setRECT(&Rect, INGAME_SCREENW, 0, 1024 - INGAME_SCREENW, 512);
+    ClearImage(&Rect, 0, 0, 0);
 
-int	X;
-	for (X=0;X<16;X++)
-    {
-u8	C0=0xff*(X&1);
-	DrawSync(0); setRECT(&Rect,X*64,  0,1024/16,256); ClearImage(&Rect,C0,0,0xff-C0);
-	DrawSync(0); setRECT(&Rect,X*64,256,1024/16,256); ClearImage(&Rect,0xff-C0,0,C0);
+    for (int X = 0; X < 8; X++) {
+        u8 C0 = 0xFF * (X & 1);
+        DrawSync(0);
+
+        // Clear the top half of the screen
+        setRECT(&Rect, X * 128, 0, 1024 / 8, 256);
+        ClearImage(&Rect, C0, 0, 0xFF - C0);
+
+        // Clear the bottom half of the screen
+        setRECT(&Rect, X * 128, 256, 1024 / 8, 256);
+        ClearImage(&Rect, 0xFF - C0, 0, C0);
     }
 #endif
 }
+
 
 /*****************************************************************************/
 void VidScrOn()
@@ -287,7 +349,7 @@ void VidSetRes(int x, int y)
 	ASSERT( y == 256 );
 
 	if ((VidGetScrW() != x) || (VidGetScrH() != y))
-		{
+	{
 		RECT	clrRect;
 
 		ScreenW=x;
@@ -295,7 +357,7 @@ void VidSetRes(int x, int y)
 
 		VidSetDrawEnv();
 		SetGeomOffset( (x / 2), (y / 2) );
-		}
+	}
 }
 
 
@@ -346,11 +408,14 @@ u8	*screenData=LoadPakScreen(LOADINGSCREENS_BOOTSCREEN_GFX);
 
 // Init VBL
 	VbFunc = NULL;
-	for (int i=0; i<MaxVBFuncs; i++) VbFuncList[i] = NULL;
+	for (int i=0; i<MaxVBFuncs; i++)
+	{
+		VbFuncList[i] = NULL;
+	}
 	VSyncCallback( VidVSyncCallback );
 
 	// Delay to let the screen stabilise before we put up the loading screen
-	for(int i=0;i<50;i++)
+	for(int i=0; i<50; i++)
 	{
 		VSync(0);
 	}
@@ -359,82 +424,81 @@ u8	*screenData=LoadPakScreen(LOADINGSCREENS_BOOTSCREEN_GFX);
 
 /*****************************************************************************/
 #ifdef __USER_paul__
-int ScreenClipBox=1;
+int ScreenClipBox = 1;
 #else
-int ScreenClipBox=0;
+int ScreenClipBox = 0;
 #endif
-void	VidSwapDraw()
+
+void VidSwapDraw()
 {
-int		LastFrame=FrameFlipFlag;
-int		ScrH=VidGetScrH()*FrameFlipFlag;
+    int LastFrame = FrameFlipFlag;
+    int ScrH = VidGetScrH() * FrameFlipFlag;
+    FrameFlipFlag ^= 1;
+    TickBuffer[FrameFlipFlag] = TickCount;
+    TickCount = 0;
 
-		FrameFlipFlag^=1;
-		TickBuffer[FrameFlipFlag]=TickCount; TickCount=0;
-		Screen[FrameFlipFlag].Disp.disp.x=0;
-		Screen[FrameFlipFlag].Disp.disp.y=ScrH;
-		Screen[FrameFlipFlag].Disp.disp.w=ScreenW;
-		Screen[FrameFlipFlag].Disp.disp.h=ScreenH;
-		Screen[FrameFlipFlag].Disp.screen.x=ScreenXOfs;
-		Screen[FrameFlipFlag].Disp.screen.y=ScreenYOfs;
-		Screen[FrameFlipFlag].Disp.screen.w=256;
-		Screen[FrameFlipFlag].Disp.screen.h=ScreenH;
-		VblDrawEnv=&Screen[FrameFlipFlag].Draw;
-		VblDispEnv=&Screen[FrameFlipFlag].Disp;
-		VSync(0);	// < -need this here, not in game (vsync miss bug)
-// If set, load background screen
-		if (ScreenImage) 
-		{	
-			LoadImage(&Screen[LastFrame].Disp.disp ,(u_long*)ScreenImage);
-			while(DrawSync(1));
-		}
+    Screen[FrameFlipFlag].Disp.disp.x = 0;
+    Screen[FrameFlipFlag].Disp.disp.y = ScrH;
+    Screen[FrameFlipFlag].Disp.disp.w = ScreenW;
+    Screen[FrameFlipFlag].Disp.disp.h = ScreenH;
 
-#if	defined(__VERSION_DEBUG__)
+    Screen[FrameFlipFlag].Disp.screen.x = ScreenXOfs;
+    Screen[FrameFlipFlag].Disp.screen.y = ScreenYOfs;
+    Screen[FrameFlipFlag].Disp.screen.w = 256;
+    Screen[FrameFlipFlag].Disp.screen.h = ScreenH;
 
-if(ScreenClipBox==1)
-{
-	DrawLine(15,25,ScreenW-15,25,255,0,0,0);
-	DrawLine(15,ScreenH-25,ScreenW-15,ScreenH-25,255,0,0,0);
-	DrawLine(15,25,15,ScreenH-25,255,0,0,0);
-	DrawLine(ScreenW-15,25,ScreenW-15,ScreenH-25,255,0,0,0);
+    VblDrawEnv = &Screen[FrameFlipFlag].Draw;
+    VblDispEnv = &Screen[FrameFlipFlag].Disp;
 
-	DrawLine(0,0,511,0,0,255,0,0);
-	DrawLine(0,255,511,255,0,255,0,0);
-	DrawLine(0,0,0,255,0,255,0,0);
-	DrawLine(511,0,511,255,0,255,0,0);
-}
-if(ScreenClipBox==2)
-{
-	POLY_F4 *f4;
-	f4=GetPrimF4();
-	setXYWH(f4,0,0,ScreenW,20);
-	setRGB0(f4,50,50,50);
-	AddPrimToList(f4,0);
-	f4=GetPrimF4();
-	setXYWH(f4,0,ScreenH-20,ScreenW,20);
-	setRGB0(f4,50,50,50);
-	AddPrimToList(f4,0);
-	f4=GetPrimF4();
-	setXYWH(f4,ScreenW-10,20,10,ScreenH-40);
-	setRGB0(f4,50,50,50);
-	AddPrimToList(f4,0);
-	f4=GetPrimF4();
-	setXYWH(f4,0,20,10,ScreenH-40);
-	setRGB0(f4,50,50,50);
-	AddPrimToList(f4,0);
-}
+    VSync(0);
+
+    if (ScreenImage)
+    {
+        LoadImage(&Screen[LastFrame].Disp.disp, (u_long*)ScreenImage);
+        while (DrawSync(1));
+    }
+
+#if defined(__VERSION_DEBUG__)
+
+    if (ScreenClipBox == 1)
+    {
+        DrawLine(15, 25, ScreenW - 15, 25, 255, 0, 0, 0);
+        DrawLine(15, ScreenH - 25, ScreenW - 15, ScreenH - 25, 255, 0, 0, 0);
+        DrawLine(15, 25, 15, ScreenH - 25, 255, 0, 0, 0);
+        DrawLine(ScreenW - 15, 25, ScreenW - 15, ScreenH - 25, 255, 0, 0, 0);
+
+        DrawLine(0, 0, 511, 0, 0, 255, 0, 0);
+        DrawLine(0, 255, 511, 255, 0, 255, 0, 0);
+        DrawLine(0, 0, 0, 255, 0, 255, 0, 0);
+        DrawLine(511, 0, 511, 255, 0, 255, 0, 0);
+    }
+
+    if (ScreenClipBox == 2)
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            POLY_F4* f4 = GetPrimF4();
+            int x = (i == 2) ? ScreenW - 10 : 0;
+            int y = (i == 1) ? ScreenH - 20 : 20;
+            int w = (i == 2) ? 10 : ScreenW;
+            int h = (i == 1 || i == 3) ? 20 : ScreenH - 40;
+
+            setXYWH(f4, x, y, w, h);
+            setRGB0(f4, 50, 50, 50);
+            AddPrimToList(f4, 0);
+        }
+    }
 #endif
-	// How many frames since we last flipped the display?
-	int	fc=FrameCounter;
-	s_vblsThisFrame=fc-s_lastFrameCounter;
-	s_lastFrameCounter=fc;
 
-	// Can get 0 vbls during start up, and it breaks things
-	if(s_vblsThisFrame==0)
-	{
-		s_vblsThisFrame=1;
-	}
+    int fc = FrameCounter;
+    s_vblsThisFrame = fc - s_lastFrameCounter;
+    s_lastFrameCounter = fc;
+
+    if (s_vblsThisFrame == 0)
+    {
+        s_vblsThisFrame = 1;
+    }
 }
-
 
 
 /*****************************************************************************/
@@ -453,42 +517,74 @@ u8		*Screen=(u8*)MemAlloc(512*256*2,"Screen");
 /*** VRAM VIEWER *************************************************************/
 /*****************************************************************************/
 
-#if	defined(__VERSION_DEBUG__)
-#define	UseVRamViewer
+#if defined(__VERSION_DEBUG__) && defined(UseVRamViewer)
 
-#ifdef		UseVRamViewer
-#include	"pad\pads.H"
-void 	VRamViewer()
+#include "pad\pads.H"
+
+void VRamViewer()
 {
-bool 	Done=0;
-sVidScreen	*Scr=VidGetScreen();
-u16 	Pad;
-int 	OldX=Scr->Disp.disp.x,OldY=Scr->Disp.disp.y;
+    bool Done = false;
+    sVidScreen* Scr = VidGetScreen();
+    u16 Pad;
+    int OldX = Scr->Disp.disp.x;
+    int OldY = Scr->Disp.disp.y;
 
-        while(!Done)
-	        {
-            PadUpdate();
-            DbgPollHost();
+    while (!Done)
+    {
+        PadUpdate();
+        DbgPollHost();
 
-           Pad=PadGetHeld(0);
+        Pad = PadGetHeld(0);
+
 #ifdef __USER_paul__
-			// my finger was hurting..
-            if((PadGetDown(0) & PAD_SELECT)) Done=1;
+        // my finger was hurting..
+        if ((PadGetDown(0) & PAD_SELECT))
+        {
+            Done = true;
+        }
 #else
-            if(!(Pad & PAD_SELECT)) Done=1;
+        if (!(Pad & PAD_SELECT))
+        {
+            Done = true;
+        }
 #endif
 
-            if(Pad&PAD_LEFT)	if(Scr->Disp.disp.x) 				Scr->Disp.disp.x--;
-            if(Pad&PAD_RIGHT)	if(Scr->Disp.disp.x<1024-ScreenW)	Scr->Disp.disp.x++;
-            if(Pad&PAD_UP) 		if(Scr->Disp.disp.y) 				Scr->Disp.disp.y--;
-            if(Pad&PAD_DOWN)	if(Scr->Disp.disp.y<512-ScreenH) 	Scr->Disp.disp.y++;
-            PutDispEnv(&Scr->Disp);
-            PutDrawEnv(&Scr->Draw);
-	        }
+        if (Pad & PAD_LEFT)
+        {
+            if (Scr->Disp.disp.x)
+            {
+                Scr->Disp.disp.x--;
+            }
+        }
+        if (Pad & PAD_RIGHT)
+        {
+            if (Scr->Disp.disp.x < 1024 - ScreenW)
+            {
+                Scr->Disp.disp.x++;
+            }
+        }
+        if (Pad & PAD_UP)
+        {
+            if (Scr->Disp.disp.y)
+            {
+                Scr->Disp.disp.y--;
+            }
+        }
+        if (Pad & PAD_DOWN)
+        {
+            if (Scr->Disp.disp.y < 512 - ScreenH)
+            {
+                Scr->Disp.disp.y++;
+            }
+        }
 
-        Scr->Disp.disp.x=OldX;
-        Scr->Disp.disp.y=OldY;
+        PutDispEnv(&Scr->Disp);
+        PutDrawEnv(&Scr->Draw);
+    }
 
+    Scr->Disp.disp.x = OldX;
+    Scr->Disp.disp.y = OldY;
 }
+
 #endif
 #endif
