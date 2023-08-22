@@ -130,24 +130,23 @@ int CGUITextBox::getTextHeight()
   ---------------------------------------------------------------------- */
 void CGUITextBox::recalc()
 {
-	FontBank	*fb;
-	char		*string;
-
 	CGUIObjectWithFont::recalc();
-	fb=getFontBank();
-	string=(char*)TranslationDatabase::getString(m_textId);
-		
-#ifdef __VERSION_DEBUG__
-	if(fb->getStringWidth(string)>getW()-(BORDERWIDTH*2)||
-	   fb->getStringHeight(string)>getH()-(BORDERHEIGHT*2))
+	FontBank* fb = getFontBank();
+	char* string = (char*)TranslationDatabase::getString(m_textId);
+
+	const int textBoxWidth = getW() - (BORDERWIDTH * 2);
+	const int textBoxHeight = getH() - (BORDERHEIGHT * 2);
+
+	if (fb->getStringWidth(string) > textBoxWidth || fb->getStringHeight(string) > textBoxHeight)
 	{
 		GUI_DBGMSG("Text overflow in CGUITextBox!");
+		return; // Early return to skip the rest of the function
 	}
-#endif
-		
-	m_textY=(getH()-(BORDERHEIGHT*2)-fb->getStringHeight(string))/2;
-}
 
+	const int textHeight = fb->getStringHeight(string);
+
+	m_textY = (textBoxHeight - textHeight) / 2;
+}
 
 /*===========================================================================
  end */
