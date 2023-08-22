@@ -91,60 +91,46 @@ void CJellyfishGenerator::init()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CJellyfishGenerator::think( int _frames, CLevel *level )
+void CJellyfishGenerator::think(int _frames, CLevel *level)
 {
-	if ( m_on )
+	if (m_on)
 	{
-		if ( m_timer <= 0 )
+		if (m_timer <= 0 && m_jellyfishCount < 10)
 		{
-			if ( m_jellyfishCount < 10 )
+			m_timer = GameState::getOneSecondInFrames();
+			m_jellyfishCount++;
+
+			DVECTOR const &offset = CLevel::getCameraPos();
+			DVECTOR startPos;
+
+			CNpcEnemy *enemy = nullptr;
+			int npcType = CNpcEnemy::NPC_SMALL_JELLYFISH_BACKGROUND;
+
+			if (m_level == 3)
 			{
-				// add jellyfish
+				npcType = CNpcEnemy::NPC_BUTTERFLY_BACKGROUND;
+			}
 
-				m_timer = 1 * GameState::getOneSecondInFrames();
+			enemy = CNpcEnemy::Create(npcType);
+			CNpcSmallJellyfishBackgroundEnemy *jfish = dynamic_cast<CNpcSmallJellyfishBackgroundEnemy *>(enemy);
 
-				m_jellyfishCount++;
-
-				CNpcEnemy *enemy = NULL;
-
-				switch( m_level )
+			if (jfish)
+			{
+				if ((getRnd() % 10) > 4)
 				{
-					case 1:
-					case 2:
-					{
-						enemy=CNpcEnemy::Create( CNpcEnemy::NPC_SMALL_JELLYFISH_BACKGROUND );
-						break;
-					}
-
-					case 3:
-					{
-						enemy=CNpcEnemy::Create( CNpcEnemy::NPC_BUTTERFLY_BACKGROUND );
-						break;
-					}
-				}
-
-				DVECTOR const &offset = CLevel::getCameraPos();
-
-				DVECTOR startPos;
-
-				CNpcSmallJellyfishBackgroundEnemy *jfish = ( CNpcSmallJellyfishBackgroundEnemy * ) enemy;
-
-				if ( ( getRnd() % 10 ) > 4 )
-				{
-					jfish->setTargetHeading( 0 );
+					jfish->setTargetHeading(0);
 					startPos.vx = offset.vx - 20;
 				}
 				else
 				{
-					jfish->setTargetHeading( 2048 );
+					jfish->setTargetHeading(2048);
 					startPos.vx = offset.vx + VidGetScrW() + 20;
 				}
 
-				startPos.vy = offset.vy + ( getRnd() % VidGetScrH() );
-
-				enemy->setStartPos( startPos.vx >> 4, startPos.vy >> 4 );
-				enemy->postInit();
-				enemy->updateCollisionArea();
+				startPos.vy = offset.vy + (getRnd() % VidGetScrH());
+				jfish->setStartPos(startPos.vx >> 4, startPos.vy >> 4);
+				jfish->postInit();
+				jfish->updateCollisionArea();
 			}
 		}
 		else
@@ -153,6 +139,7 @@ void CJellyfishGenerator::think( int _frames, CLevel *level )
 		}
 	}
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
